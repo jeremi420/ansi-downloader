@@ -10,10 +10,8 @@ class Subtitles:
     alternative_title: str
 
 
-def main():
-    start_url = "http://animesub.info/szukaj_old.php?szukane=+&pTitle=org"
-    response = get(start_url)
-    soup = BeautifulSoup(response.content.decode("cp1250"), "html.parser")
+def parse_subtitles(html: str):
+    soup = BeautifulSoup(html, "html.parser")
     subtitles_tags = soup.find_all("table", class_="Napisy")[1:]
     subtitles: list[Subtitles] = []
     for tag in subtitles_tags:
@@ -32,7 +30,13 @@ def main():
                 alternative_title=alternative_title,
             )
         )
-    print(subtitles)
+    return subtitles
+
+
+def main():
+    start_url = "http://animesub.info/szukaj_old.php?szukane=+&pTitle=org"
+    response = get(start_url)
+    print(parse_subtitles(response.content.decode("cp1250")))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 from requests import get
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, PageElement, Tag
 from urllib.parse import quote
 
 import requests
@@ -35,30 +35,29 @@ def search_type_to_param(search_type: SearchType):
 
 def parse_subtitles_list(html: str):
     soup = BeautifulSoup(html, "html.parser")
-    subtitles_tags = soup.find_all("table", class_="Napisy")[1:]
+    subtitles_elements: list[Tag] = soup.find_all("table", class_="Napisy")[1:]
     subtitles: list[Subtitles] = []
-    for tag in subtitles_tags:
-        original_title = tag.css.select("tr:nth-child(1) > td:nth-child(1)")[0].string
-        english_title = tag.css.select("tr:nth-child(2) > td:nth-child(1)")[0].string
-        alternative_title = tag.css.select("tr:nth-child(3) > td:nth-child(1)")[
-            0
-        ].string
-        alternative_title = tag.css.select("tr:nth-child(3) > td:nth-child(1)")[
-            0
-        ].string
-        subtitles.append(
-            Subtitles(
-                original_title=original_title,
-                english_title=english_title,
-                alternative_title=alternative_title,
-            )
-        )
+    for element in subtitles_elements:
+        subtitles.append(parse_subtitles_item(element))
     return subtitles
+
+
+def parse_subtitles_item(container: Tag):
+    original_title = container.findAll("tr")[0].find("td").string
+    english_title = container.findAll("tr")[1].find("td").string
+    alternative_title = container.findAll("tr")[2].find("td").string
+
+    return Subtitles(
+        original_title=original_title,
+        english_title=english_title,
+        alternative_title=alternative_title,
+    )
 
 
 def main():
     response = search_ansi("space dandy")
-    print(parse_subtitles_list(response))
+    subtitles = parse_subtitles_list(response)
+    print(subtitles[0])
 
 
 if __name__ == "__main__":

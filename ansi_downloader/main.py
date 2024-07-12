@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from typing import Literal
 from requests import get
 from bs4 import BeautifulSoup
+from urllib.parse import quote
+
+import requests
 
 
 @dataclass
@@ -10,7 +14,26 @@ class Subtitles:
     alternative_title: str
 
 
-def parse_subtitles(html: str):
+SearchType = Literal["original_title", "english_title", "alternative_title"]
+
+
+def search_ansi(
+    search_term: str, search_type: SearchType = "original_title", page: int = 1
+):
+    url = f"http://animesub.info/szukaj.php?szukane={quote(search_term)}&pTitle={search_type_to_param(search_type)}&od={page - 1}"
+    response = requests.get(url)
+    return response.content.decode("cp1250")
+
+
+def search_type_to_param(search_type: SearchType):
+    if search_type == "english_title":
+        return "en"
+    if search_type == "original_title":
+        return "org"
+    return "pl"
+
+
+def parse_subtitles_list(html: str):
     soup = BeautifulSoup(html, "html.parser")
     subtitles_tags = soup.find_all("table", class_="Napisy")[1:]
     subtitles: list[Subtitles] = []
@@ -34,9 +57,8 @@ def parse_subtitles(html: str):
 
 
 def main():
-    start_url = "http://animesub.info/szukaj_old.php?szukane=+&pTitle=org"
-    response = get(start_url)
-    print(parse_subtitles(response.content.decode("cp1250")))
+    response = search_ansi("space dandy")
+    print(parse_subtitles_list(response))
 
 
 if __name__ == "__main__":

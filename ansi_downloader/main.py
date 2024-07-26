@@ -81,8 +81,6 @@ def download_subtitles_file(
         data={"id": subtitles.form_data.id, "sh": subtitles.form_data.sh},
     )
     file_name = response.headers["content-disposition"].split("filename=")[1]
-    if not os.path.exists(settings.subtitles_directory):
-        os.makedirs(settings.subtitles_directory)
     with open(os.path.join(settings.subtitles_directory, file_name), "wb") as file:
         file.write(response.content)
     return SubtitlesFile(file_name=file_name)

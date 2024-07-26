@@ -1,8 +1,11 @@
 from dataclasses import dataclass
+import os
 from typing import Literal
 from requests import Session
 from bs4 import BeautifulSoup, Tag
 from urllib.parse import quote
+
+from ansi_downloader.settings import Settings
 
 
 @dataclass
@@ -70,22 +73,27 @@ def parse_subtitles_item(container: Tag):
     )
 
 
-def download_subtitles_file(subtitles: Subtitles, session: Session = Session()):
+def download_subtitles_file(
+    subtitles: Subtitles, settings: Settings, session: Session = Session()
+):
     response = session.post(
         "http://animesub.info/sciagnij.php",
         data={"id": subtitles.form_data.id, "sh": subtitles.form_data.sh},
     )
     file_name = response.headers["content-disposition"].split("filename=")[1]
-    with open(file_name, "wb") as file:
+    if not os.path.exists(settings.subtitles_directory):
+        os.makedirs(settings.subtitles_directory)
+    with open(os.path.join(settings.subtitles_directory, file_name), "wb") as file:
         file.write(response.content)
     return SubtitlesFile(file_name=file_name)
 
 
 def main():
+    settings = Settings()
     session = Session()
     response = search_ansi("space dandy", session=session)
     subtitles = parse_subtitles_list(response)
-    download_subtitles_file(subtitles[0], session)
+    download_subtitles_file(subtitles[0], settings, session)
     print(subtitles[0])
 
 

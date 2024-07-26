@@ -9,8 +9,15 @@ readme = "README.md"
 python = "^3.12"
 requests = "^2.32.3"
 beautifulsoup4 = "^4.12.3"
+pydantic = "^2.8.2"
+pydantic-settings = "^2.3.4"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+exclude =  [ ".venv" ]
+venvPath = "."
+venv =  ".venv"
